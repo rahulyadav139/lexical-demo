@@ -9,6 +9,7 @@
 import {Provider} from '@lexical/yjs';
 import {WebsocketProvider} from 'y-websocket';
 import {Doc} from 'yjs';
+import {SocketIOProvider} from 'y-socket.io';
 
 const url = new URL(window.location.href);
 const params = new URLSearchParams(url.search);
@@ -40,4 +41,39 @@ export function createWebsocketProvider(
       connect: false,
     },
   );
+}
+
+////////////////////////////
+
+// import {Provider} from '@lexical/yjs';
+
+// import {Doc} from 'yjs';
+
+// const websocketEndpoint = 'ws://gxwebsocketserver-env-dev.eba-g8j3q9um.ap-south-1.elasticbeanstalk.com';
+
+// parent dom -> child doc
+export function createSocketIoProvider(
+  authToken: string,
+  websocketEndpoint: string,
+  id: string,
+  yjsDocMap: Map<string, Doc>,
+): Provider {
+  // console.log(yjsDocMap);
+  let doc = yjsDocMap.get(id);
+  if (doc === undefined) {
+    doc = new Doc();
+    yjsDocMap.set(id, doc);
+  } else {
+    doc.load();
+  }
+
+  const ysocketio = new SocketIOProvider(websocketEndpoint, id, doc, {
+    auth: {
+      token: authToken,
+    },
+    autoConnect: false,
+  });
+
+  // @ts-ignore
+  return ysocketio;
 }

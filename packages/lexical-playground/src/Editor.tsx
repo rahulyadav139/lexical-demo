@@ -26,7 +26,7 @@ import * as React from 'react';
 import {useEffect, useState} from 'react';
 import {CAN_USE_DOM} from 'shared/canUseDOM';
 
-import {createWebsocketProvider} from './collaboration';
+import {createWebsocketProvider, createSocketIoProvider} from './collaboration';
 import {useSettings} from './context/SettingsContext';
 import {useSharedHistoryContext} from './context/SharedHistoryContext';
 import TableCellNodes from './nodes/TableCellNodes';
@@ -77,6 +77,18 @@ import Placeholder from './ui/Placeholder';
 const skipCollaborationInit =
   // @ts-ignore
   window.parent != null && window.parent.frames.right === window;
+
+const awarenessTemp = {
+  authToken:
+    'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NDg5ODg5YWY1MjgyYTdjNmU5ZGRhMzAiLCJpYXQiOjE2OTQ0MTM0MTV9.TsnQb-N6JPhfzOJB4t7jtHDKeij_iiWxr2dWQu9uNOyh4rHwpD6AAeJIaKkyFm5KZzMv57G7qOMkW7QMKOSW8-RxRP6_1F3uO1G6YDOmYrl2CtrF_DyoX3T0UD7u9_f6GICZ-zKTnUlLHQHTnEQ7pysL28aqoMAD88bKk-DLTpQPjfoE52Q_RnFt5qgknK2bTmVNaf3anCyPWicAN46FJFbSSYraXOXFMK-HpFhDw5CGdBHV97IyTaKatj0Ct82bj3R-59CCDGMByiVkomJXsqZpy_oLrjP4myh7ov__9KL5AiZOwOkUqsW-V-b5FjI8yT7C__OP5x6N3x6cDqsGESXGfzuKI0NRTbByPViA0I_GcFosfpKuH8ZoRJTiNgE-W34P1UWDVJupFk_8yarxOL9EbMp37dAFwhHOdIyMWsDQxoED3f8_eXXuQkF6UBz38uphoXK4qnYD0FtV5ncW3pbHS855wpkH75HwAhgkVYNmV79TxvaMevrQR-tTGbvSlHgbn3HvNaV6Kbhizp3G1Afy_Lo3vv4EZpNa9Ib52iOQCS9M5dpnEzSLzxUkH2akkGbXFM0YVWhry7z63ZqPrNzigzuXpRprY-SWgl2IJO42T8DqFEeHoRkFgNZvVr1ZFrsKWmVZ-1q9TJdW0vtYTejI43tXtCwlA52BOdSUYDM',
+  cursorColor: 'blue',
+  id: 'id100',
+  username: 'Kirti',
+  websocketEndpoint:
+    'ws://gxwebsocketserver-env-dev.eba-g8j3q9um.ap-south-1.elasticbeanstalk.com',
+};
+
+const isSocketServer = false;
 
 export default function Editor(): JSX.Element {
   const {historyState} = useSharedHistoryContext();
@@ -161,17 +173,31 @@ export default function Editor(): JSX.Element {
         <KeywordsPlugin />
         <SpeechToTextPlugin />
         <AutoLinkPlugin />
-        <CommentPlugin
+        {/* <CommentPlugin
           providerFactory={isCollab ? createWebsocketProvider : undefined}
-        />
+        /> */}
         {isRichText ? (
           <>
             {isCollab ? (
-              <CollaborationPlugin
-                id="main"
-                providerFactory={createWebsocketProvider}
-                shouldBootstrap={!skipCollaborationInit}
-              />
+              <>
+                {!isSocketServer ? (
+                  <CollaborationPlugin
+                    id="main"
+                    providerFactory={createSocketIoProvider.bind(
+                      this,
+                      awarenessTemp?.authToken,
+                      awarenessTemp?.websocketEndpoint,
+                    )}
+                    shouldBootstrap={!skipCollaborationInit}
+                  />
+                ) : (
+                  <CollaborationPlugin
+                    id="main"
+                    providerFactory={createWebsocketProvider}
+                    shouldBootstrap={!skipCollaborationInit}
+                  />
+                )}
+              </>
             ) : (
               <HistoryPlugin externalHistoryState={historyState} />
             )}
